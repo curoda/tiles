@@ -179,8 +179,20 @@
   <script>
     let puzzle = [];
     let emptyIndex = 15;
+    let selectedImage = '';
     let timerInterval;
     let startTime;
+
+    const images = [
+      'sumo.webp',
+      'unicorn.webp',
+      'beach.webp',
+      'reindeer.webp',
+      'platy.webp',
+      'grinch.webp',
+      'karate.webp',
+      'otter.webp'
+    ];
 
     const puzzleContainer = document.getElementById('puzzle-container');
     const timerDisplay = document.getElementById('timer');
@@ -191,6 +203,7 @@
     const overlayTime = document.getElementById('overlay-time');
 
     document.getElementById('start-btn').addEventListener('click', () => {
+      selectedImage = images[Math.floor(Math.random() * images.length)];
       puzzle = Array.from({ length: 15 }, (_, i) => i).concat('empty');
       emptyIndex = 15;
       startTime = Date.now();
@@ -223,6 +236,7 @@
         } else {
           const row = Math.floor(tile / 4);
           const col = tile % 4;
+          tileDiv.style.backgroundImage = `url('${selectedImage}')`;
           tileDiv.style.backgroundPosition = `${col * 25}% ${row * 25}%`;
           tileDiv.style.backgroundSize = '400% 400%';
         }
