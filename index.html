@@ -258,8 +258,11 @@
         } else {
           const tileRow = Math.floor(tile / 4);
           const tileCol = tile % 4;
-          tileDiv.style.backgroundImage = `url('/api/placeholder/400/400')`; // Using placeholder for now
-          tileDiv.style.backgroundPosition = `${-tileCol * 33.333}% ${-tileRow * 33.333}%`;
+          // Calculate background position to show correct part of the image
+          const tileRow = Math.floor(tile / 4);
+          const tileCol = tile % 4;
+          tileDiv.style.backgroundImage = `url('/api/placeholder/400/400')`;
+          tileDiv.style.backgroundPosition = `${-tileCol * 100 / 3}% ${-tileRow * 100 / 3}%`;
           tileDiv.style.backgroundSize = '400% 400%';
           tileDiv.style.border = '1px solid #999';
           tileDiv.style.fontSize = '24px';
@@ -323,11 +326,27 @@
     function moveTile(clickedIndex) {
       console.log('Clicked index:', clickedIndex);
       console.log('Current empty index:', emptyIndex);
-      console.log('Is adjacent?', isAdjacent(clickedIndex, emptyIndex));
+      console.log('Current puzzle state:', puzzle);
       
+      // Only allow moving tiles adjacent to the empty space
       if (isAdjacent(clickedIndex, emptyIndex)) {
-        swapTiles(clickedIndex, emptyIndex);
+        // Get current tile values
+        const clickedTile = puzzle[clickedIndex];
+        const emptyTile = puzzle[emptyIndex];
+        
+        // Update puzzle array
+        puzzle[emptyIndex] = clickedTile;
+        puzzle[clickedIndex] = emptyTile;
+        
+        // Update empty index
+        emptyIndex = clickedIndex;
+        
+        console.log('After move:');
+        console.log('New empty index:', emptyIndex);
+        console.log('New puzzle state:', puzzle);
+        
         renderPuzzle();
+        
         if (checkWin()) {
           endGame();
         }
