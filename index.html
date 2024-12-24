@@ -275,8 +275,8 @@
            displayDiv.style.backgroundColor = '#eee';
            displayDiv.style.border = '1px solid #ddd';
        } else {
-           // For non-empty tiles, show the corresponding portion of the image
-           const sourceX = tile % 4; // Use tile index to calculate position in the image
+           // Calculate the background position based on the tile index
+           const sourceX = tile % 4;
            const sourceY = Math.floor(tile / 4);
   
            displayDiv.style.backgroundImage = `url('${this.selectedImage}')`;
@@ -291,6 +291,10 @@
                backgroundPosition: `${-sourceX * 100}% ${-sourceY * 100}%`
            });
        }
+  
+       displayDiv.addEventListener('click', () => this.handleTileClick(position));
+       return displayDiv;
+   }
 
      displayDiv.addEventListener('click', () => this.handleTileClick(position));
      return displayDiv;
