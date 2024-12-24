@@ -295,10 +295,6 @@
        displayDiv.addEventListener('click', () => this.handleTileClick(position));
        return displayDiv;
    }
-
-     displayDiv.addEventListener('click', () => this.handleTileClick(position));
-     return displayDiv;
- }
       
       handleTileClick(clickedPosition) {
         if (this.isAdjacent(clickedPosition, this.emptyIndex)) {
