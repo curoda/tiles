@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sliding Puzzle Game</title>
   <style>
-    /* General Reset */
     * {
       margin: 0;
       padding: 0;
@@ -178,80 +177,35 @@
   </div>
 
   <script>
-    let userName = '';
     let puzzle = [];
     let emptyIndex = 15;
-    let selectedImage = '';
-    let startTime = null;
-    let timerInterval = null;
+    let timerInterval;
+    let startTime;
 
-    const images = [
-      'sumo.webp',
-      'unicorn.webp',
-      'beach.webp',
-      'reindeer.webp',
-      'platy.webp',
-      'grinch.webp',
-      'karate.webp',
-      'otter.webp'
-    ];
-
-    const startScreen = document.getElementById('start-screen');
-    const gameScreen = document.getElementById('game-screen');
     const puzzleContainer = document.getElementById('puzzle-container');
     const timerDisplay = document.getElementById('timer');
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
     const winOverlay = document.getElementById('win-overlay');
     const overlayMessage = document.getElementById('overlay-message');
     const overlayTime = document.getElementById('overlay-time');
 
     document.getElementById('start-btn').addEventListener('click', () => {
-      userName = document.getElementById('username').value.trim();
-      if (!userName) {
-        alert('Please enter your name.');
-        return;
-      }
+      puzzle = Array.from({ length: 15 }, (_, i) => i).concat('empty');
+      emptyIndex = 15;
+      startTime = Date.now();
+      timerInterval = setInterval(updateTimer, 1000);
       startScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
-      initGame();
+      shufflePuzzle();
+      renderPuzzle();
     });
 
     document.getElementById('play-again-btn').addEventListener('click', () => {
       winOverlay.classList.add('hidden');
       startScreen.classList.remove('hidden');
+      clearInterval(timerInterval);
     });
-
-    function initGame() {
-      selectedImage = images[Math.floor(Math.random() * images.length)];
-      puzzle = Array.from(Array(15).keys());
-      puzzle.push('empty');
-      shufflePuzzle();
-      emptyIndex = puzzle.indexOf('empty');
-      renderPuzzle();
-      startTime = Date.now();
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(updateTimer, 1000);
-    }
-
-    function shufflePuzzle() {
-      do {
-        for (let i = puzzle.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]];
-        }
-      } while (!isSolvable(puzzle));
-    }
-
-    function isSolvable(arr) {
-      let inversions = 0;
-      const flatPuzzle = arr.filter(v => v !== 'empty');
-      for (let i = 0; i < flatPuzzle.length; i++) {
-        for (let j = i + 1; j < flatPuzzle.length; j++) {
-          if (flatPuzzle[i] > flatPuzzle[j]) inversions++;
-        }
-      }
-      const blankRowFromBottom = 4 - Math.floor(arr.indexOf('empty') / 4);
-      return (inversions % 2 === 0) === (blankRowFromBottom % 2 === 0);
-    }
 
     function renderPuzzle() {
       puzzleContainer.innerHTML = '';
@@ -267,14 +221,10 @@
         if (tile === 'empty') {
           tileDiv.classList.add('empty-tile');
         } else {
-          const tileRow = Math.floor(tile / 4);
-          const tileCol = tile % 4;
-          const bgX = (tileCol * 25) + '%';
-          const bgY = (tileRow * 25) + '%';
-
-          tileDiv.style.backgroundImage = `url('${selectedImage}')`;
+          const row = Math.floor(tile / 4);
+          const col = tile % 4;
+          tileDiv.style.backgroundPosition = `${col * 25}% ${row * 25}%`;
           tileDiv.style.backgroundSize = '400% 400%';
-          tileDiv.style.backgroundPosition = `${bgX} ${bgY}`;
         }
 
         tileDiv.style.width = `${tileWidth}px`;
@@ -287,6 +237,27 @@
         tileDiv.addEventListener('click', () => moveTile(index));
         puzzleContainer.appendChild(tileDiv);
       });
+    }
+
+    function shufflePuzzle() {
+      do {
+        for (let i = puzzle.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]];
+        }
+      } while (!isSolvable());
+    }
+
+    function isSolvable() {
+      let inversions = 0;
+      const flatPuzzle = puzzle.filter(v => v !== 'empty');
+      for (let i = 0; i < flatPuzzle.length; i++) {
+        for (let j = i + 1; j < flatPuzzle.length; j++) {
+          if (flatPuzzle[i] > flatPuzzle[j]) inversions++;
+        }
+      }
+      const blankRow = Math.floor(emptyIndex / 4);
+      return (inversions % 2 === 0) === (blankRow % 2 === 1);
     }
 
     function moveTile(tileIndex) {
@@ -303,8 +274,10 @@
       const col1 = index1 % 4;
       const row2 = Math.floor(index2 / 4);
       const col2 = index2 % 4;
-      return (row1 === row2 && Math.abs(col1 - col2) === 1) ||
-             (col1 === col2 && Math.abs(row1 - row2) === 1);
+      return (
+        (row1 === row2 && Math.abs(col1 - col2) === 1) ||
+        (col1 === col2 && Math.abs(row1 - row2) === 1)
+      );
     }
 
     function checkWin() {
@@ -314,8 +287,8 @@
     function endGame() {
       clearInterval(timerInterval);
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      overlayMessage.textContent = `Congratulations, ${userName}!`;
-      overlayTime.textContent = `Your time: ${Math.floor(elapsed / 60)}:${elapsed % 60}`;
+      overlayMessage.textContent = "You solved it!";
+      overlayTime.textContent = `Time: ${Math.floor(elapsed / 60)}:${elapsed % 60}`;
       winOverlay.classList.remove('hidden');
     }
 
