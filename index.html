@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solvable Sliding Puzzle</title>
+  <style>
+    /************************************************************
+     * Basic CSS & Mobile-Friendly Layout
+     ************************************************************/
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f2f2f2;
+      margin: 0 auto;
+    }
+
+    .screen-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /************************************************************
+     * START SCREEN
+     ************************************************************/
+    #start-screen .start-content {
+      text-align: center;
+    }
+
+    #start-screen h1 {
+      font-size: 2em;
+      margin-bottom: 1em;
+      color: #c62828; /* Christmas red theme */
+    }
+
+    #start-screen input {
+      font-size: 1em;
+      padding: 0.5em;
+      width: 200px;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+
+    #start-screen button {
+      display: block;
+      font-size: 1.2em;
+      padding: 0.7em 1.2em;
+      background-color: #c62828;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    #start-screen button:hover {
+      background-color: #b71c1c;
+    }
+
+    /************************************************************
+     * GAME SCREEN
+     ************************************************************/
+    #game-screen {
+      padding: 1em;
+      background: #e0f7fa; /* Light ice-blue for a Christmas/winter feel */
+    }
+
+    header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 1em;
+    }
+
+    header h2 {
+      font-size: 1.5em;
+      margin-bottom: 0.5em;
+      color: #c62828;
+    }
+
+    #timer {
+      font-size: 1.2em;
+      color: #004d40;
+    }
+
+    .puzzle-container {
+      width: 90vw;
+      max-width: 400px;
+      height: 90vw;
+      max-height: 400px;
+      position: relative;
+      margin: 0 auto;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .tile {
+      position: absolute;
+      width: 25%;
+      height: 25%;
+      transition: transform 0.3s ease; /* Smooth sliding effect */
+      background-size: 400px 400px;    /* Adjust if your container is a different size */
+      background-repeat: no-repeat;
+      box-shadow: inset 0 0 1px rgba(0,0,0,0.4);
+      cursor: pointer;
+    }
+
+    .empty-tile {
+      background: none;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    /************************************************************
+     * WIN OVERLAY
+     ************************************************************/
+    .overlay {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay-content {
+      background: #fff url('https://images.unsplash.com/photo-1608003512213-3b48dab6da94?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover;
+      color: #fff;
+      padding: 2em;
+      text-align: center;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .overlay-content h2 {
+      font-size: 1.8em;
+      margin-bottom: 0.5em;
+    }
+
+    .overlay-content p {
+      margin-bottom: 1em;
+      font-size: 1.2em;
+    }
+
+    .overlay-content button {
+      font-size: 1em;
+      padding: 0.7em 1.2em;
+      background-color: #006064; /* Teal accent */
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .overlay-content button:hover {
+      background-color: #004d40;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- START SCREEN -->
+  <div id="start-screen" class="screen-container">
+    <div class="start-content">
+      <h1>Welcome to the Christmas Puzzle!</h1>
+      <input type="text" id="username" placeholder="Enter your name" />
+      <button id="start-btn">Start Game</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="screen-container hidden">
+    <header>
+      <h2>Solve the puzzle, claim your prize!</h2>
+      <div id="timer">00:00</div>
+    </header>
+    <div id="puzzle-container" class="puzzle-container">
+      <!-- Tiles will be dynamically created here -->
+    </div>
+  </div>
+
+  <!-- WIN OVERLAY -->
+  <div id="win-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2 id="overlay-message">Congratulations!</h2>
+      <p id="overlay-time"></p>
+      <p id="overlay-amount"></p>
+      <button id="play-again-btn">Play Again</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    /************************************************************
+     * Global Variables
+     ************************************************************/
+    let userName = '';
+    let puzzle = [];         // Array holding the current tile order [0..14, 'empty']
+    let emptyIndex = 15;     // Empty tile position in the puzzle array (0..15)
+    let selectedImage = '';  // The random image chosen
+    let startTime = null;    // Time when puzzle is started
+    let timerInterval = null;
+
+    /************************************************************
+     * Images for the puzzle
+     ************************************************************/
+    const images = [
+      'sumo.webp',
+      'unicorn.webp',
+      'beach.webp',
+      'reindeer.webp',
+      'platy.webp',
+      'grinch.webp',
+      'karate.webp',
+      'otter.webp'
+    ];
+
+    /************************************************************
+     * DOM Elements
+     ************************************************************/
+    const startScreen     = document.getElementById('start-screen');
+    const gameScreen      = document.getElementById('game-screen');
+    const puzzleContainer = document.getElementById('puzzle-container');
+    const timerDisplay    = document.getElementById('timer');
+    const winOverlay      = document.getElementById('win-overlay');
+    const overlayMessage  = document.getElementById('overlay-message');
+    const overlayTime     = document.getElementById('overlay-time');
+    const overlayAmount   = document.getElementById('overlay-amount');
+
+    /************************************************************
+     * Event Listeners
+     ************************************************************/
+    document.getElementById('start-btn').addEventListener('click', () => {
+      userName = document.getElementById('username').value.trim();
+      if (!userName) {
+        alert('Please enter your name.');
+        return;
+      }
+      // Hide start screen, show game screen
+      startScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      
+      // Initialize the game
+      initGame();
+    });
+
+    document.getElementById('play-again-btn').addEventListener('click', () => {
+      // Hide the overlay
+      winOverlay.classList.add('hidden');
+      
+      // Restart by returning to the start screen 
+      // or you could keep them in game screen and re-init
+      gameScreen.classList.add('hidden');
+      startScreen.classList.remove('hidden');
+    });
+
+    /************************************************************
+     * Game Initialization
+     ************************************************************/
+    function initGame() {
+      // Pick a random image
+      selectedImage = images[Math.floor(Math.random() * images.length)];
+      
+      // Build an array 0..14 plus 'empty' at position 15
+      puzzle = Array.from(Array(15).keys()); // [0,1,2,...,14]
+      puzzle.push('empty');
+      
+      // Shuffle puzzle until solvable
+      do {
+        shufflePuzzle(puzzle);
+      } while (!isSolvable(puzzle));
+      
+      // Find the empty tile's index
+      emptyIndex = puzzle.indexOf('empty');
+      
+      // Render the puzzle
+      renderPuzzle();
+      
+      // Start timer
+      startTime = Date.now();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    /************************************************************
+     * Shuffle (Fisher-Yates)
+     ************************************************************/
+    function shufflePuzzle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    /************************************************************
+     * Check if puzzle is solvable
+     * For a 4x4 puzzle:
+     *  - If the grid width is even, the puzzle is solvable if:
+     *    ( (row of blank from bottom) is even and (#inversions is odd) ) or
+     *    ( (row of blank from bottom) is odd  and (#inversions is even) ).
+     ************************************************************/
+    function isSolvable(arr) {
+      const width = 4; // 4x4 puzzle
+
+      // 1) Count inversions (ignore the 'empty' tile)
+      let inversions = 0;
+      const flatPuzzle = arr.filter(v => v !== 'empty');
+      for (let i = 0; i < flatPuzzle.length; i++) {
+        for (let j = i + 1; j < flatPuzzle.length; j++) {
+          if (flatPuzzle[i] > flatPuzzle[j]) {
+            inversions++;
+          }
+        }
+      }
+      
+      // 2) Find the blank row counting from the bottom
+      // emptyIndex is from 0..15 (0 at top-left, 15 at bottom-right)
+      // row = Math.floor(index / 4), but we need row from bottom:
+      const blankRowFromTop = Math.floor(arr.indexOf('empty') / width);
+      const blankRowFromBottom = width - blankRowFromTop;
+
+      // 3) For a 4x4 puzzle:
+      // If the blank is on an even row counting from the bottom (2nd, 4th, etc.)
+      //  => #inversions must be odd for the puzzle to be solvable.
+      // If the blank is on an odd row counting from the bottom (1st, 3rd, etc.)
+      //  => #inversions must be even.
+      
+      if ((blankRowFromBottom % 2 === 0) && (inversions % 2 === 1)) {
+        return true;
+      } else if ((blankRowFromBottom % 2 === 1) && (inversions % 2 === 0)) {
+        return true;
+      }
+      return false;
+    }
+
+    /************************************************************
+     * Render Puzzle
+     ************************************************************/
+    function renderPuzzle() {
+      puzzleContainer.innerHTML = '';
+      
+      puzzle.forEach((tile, index) => {
+        const tileDiv = document.createElement('div');
+        tileDiv.classList.add('tile');
+        
+        if (tile === 'empty') {
+          tileDiv.classList.add('empty-tile');
+        } else {
+          // Calculate the correct x/y background offsets
+          // tile = number from 0..14
+          const tileRow = Math.floor(tile / 4); // 0..3
+          const tileCol = tile % 4;             // 0..3
+          
+          const bgX = (tileCol * 25) + '%';  // each tile is 25% wide
+          const bgY = (tileRow * 25) + '%';  // each tile is 25% tall
+          
+          tileDiv.style.backgroundImage = `url('${selectedImage}')`;
+          tileDiv.style.backgroundPosition = `${bgX} ${bgY}`;
+          
+          // Add click handler for moving the tile
+          tileDiv.addEventListener('click', () => moveTile(index));
+        }
+        
+        // Position tile in puzzle-container
+        const row = Math.floor(index / 4);
+        const col = index % 4;
+        
+        // Translate each tile to its position
+        tileDiv.style.transform = `translate(${col * 25}%, ${row * 25}%)`;
+        
+        puzzleContainer.appendChild(tileDiv);
+      });
+    }
+
+    /************************************************************
+     * Move Tile Function
+     ************************************************************/
+    function moveTile(tileIndex) {
+      // Check if the clicked tile is adjacent to the empty tile
+      if (isAdjacent(tileIndex, emptyIndex)) {
+        // Swap
+        [puzzle[tileIndex], puzzle[emptyIndex]] = [puzzle[emptyIndex], puzzle[tileIndex]];
+        emptyIndex = tileIndex;
+        
+        // Re-render
+        renderPuzzle();
+        
+        // Check for win
+        if (checkWin()) {
+          endGame();
+        }
+      }
+    }
+
+    /************************************************************
+     * Check Adjacency
+     ************************************************************/
+    function isAdjacent(index1, index2) {
+      const row1 = Math.floor(index1 / 4);
+      const col1 = index1 % 4;
+      const row2 = Math.floor(index2 / 4);
+      const col2 = index2 % 4;
+      
+      // Adjacent if exactly one difference in row or column
+      // and same row or same column
+      return (
+        (row1 === row2 && Math.abs(col1 - col2) === 1) ||
+        (col1 === col2 && Math.abs(row1 - row2) === 1)
+      );
+    }
+
+    /************************************************************
+     * Check Win
+     ************************************************************/
+    function checkWin() {
+      // If puzzle[0] == 0, puzzle[1] == 1, ..., puzzle[14] == 14, puzzle[15] == 'empty'
+      for (let i = 0; i < 15; i++) {
+        if (puzzle[i] !== i) return false;
+      }
+      return puzzle[15] === 'empty';
+    }
+
+    /************************************************************
+     * End Game - Show Overlay
+     ************************************************************/
+    function endGame() {
+      clearInterval(timerInterval);
+      
+      // Calculate final time
+      const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const timeString = `${minutes.toString().padStart(2, '0')}:` +
+                         `${seconds.toString().padStart(2, '0')}`;
+      
+      // Decide how much the user wins
+      let amountWon;
+      const lowerName = userName.toLowerCase();
+
+      if (lowerName === 'chase') {
+        amountWon = 500;
+      } else if (['koop', 'kooper', 'fin', 'finley'].includes(lowerName)) {
+        amountWon = 1.5;
+      } else {
+        amountWon = 100;
+      }
+      
+      // Show the overlay
+      overlayMessage.textContent = `Congratulations, ${userName}!`;
+      overlayTime.textContent     = `Your time: ${timeString}`;
+      overlayAmount.textContent   = `You've won $${amountWon}!!`;
+      
+      winOverlay.classList.remove('hidden');
+    }
+
+    /************************************************************
+     * Timer Update
+     ************************************************************/
+    function updateTimer() {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      timerDisplay.textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+  </script>
+</body>
+</html>
