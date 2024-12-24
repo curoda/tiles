@@ -222,7 +222,7 @@
       
       startGame() {
         // For testing, use a placeholder image of consistent size
-        this.selectedImage = '/api/placeholder/400/400';
+        this.selectedImage = this.images[Math.floor(Math.random() * this.images.length)];
         console.log('Starting game with image:', this.selectedImage);
         
         this.initializePuzzle();
@@ -280,7 +280,7 @@
           const sourceX = tile % 4;
           const sourceY = Math.floor(tile / 4);
           
-          displayDiv.style.backgroundImage = `url('/api/placeholder/400/400')`;
+          displayDiv.style.backgroundImage = `url('${this.selectedImage}')`;
           displayDiv.style.backgroundPosition = `${-sourceX * 33.33}% ${-sourceY * 33.33}%`;
           displayDiv.style.backgroundSize = '400% 400%';
           displayDiv.style.backgroundRepeat = 'no-repeat';
