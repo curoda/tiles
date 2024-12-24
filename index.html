@@ -97,6 +97,9 @@
       user-select: none;
       -webkit-user-select: none;
       box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+      width: 25%;
+      height: 25%;
+      overflow: hidden;
     }
 
     .empty-tile {
@@ -217,19 +220,16 @@
       }
       
       startGame() {
-        this.selectedImage = this.images[Math.floor(Math.random() * this.images.length)];
-        console.log('Selected image:', this.selectedImage);
-        // Create a dummy image to ensure it's loaded
-        const preloadImg = new Image();
-        preloadImg.onload = () => {
-          this.initializePuzzle();
-          this.startTime = Date.now();
-          this.timerInterval = setInterval(() => this.updateTimer(), 1000);
-          this.startScreen.classList.add('hidden');
-          this.gameScreen.classList.remove('hidden');
-          this.renderPuzzle();
-        };
-        preloadImg.src = this.selectedImage;
+        // For testing, use a placeholder image of consistent size
+        this.selectedImage = '/api/placeholder/400/400';
+        console.log('Starting game with image:', this.selectedImage);
+        
+        this.initializePuzzle();
+        this.startTime = Date.now();
+        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+        this.startScreen.classList.add('hidden');
+        this.gameScreen.classList.remove('hidden');
+        this.renderPuzzle();
       }
       
       resetGame() {
@@ -275,15 +275,23 @@
           displayDiv.style.backgroundColor = '#eee';
           displayDiv.style.border = '1px solid #ddd';
         } else {
+          // For non-empty tiles, show the corresponding portion of the image
           const sourceX = tile % 4;
           const sourceY = Math.floor(tile / 4);
           
-          displayDiv.style.backgroundImage = `url('${this.selectedImage}')`;
+          displayDiv.style.backgroundImage = `url('/api/placeholder/400/400')`;
           displayDiv.style.backgroundPosition = `${-sourceX * 33.33}% ${-sourceY * 33.33}%`;
           displayDiv.style.backgroundSize = '400% 400%';
           displayDiv.style.backgroundRepeat = 'no-repeat';
-          displayDiv.style.border = '1px solid rgba(153, 153, 153, 0.3)';
-          displayDiv.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
+          displayDiv.style.backgroundColor = '#fff';
+          displayDiv.style.border = '1px solid #ccc';
+          
+          // Add some debug output to see what's happening
+          console.log(`Tile ${tile} at position ${position}:`, {
+            sourceX,
+            sourceY,
+            backgroundPosition: `${-sourceX * 33.33}% ${-sourceY * 33.33}%`
+          });
         }
         
         displayDiv.addEventListener('click', () => this.handleTileClick(position));
