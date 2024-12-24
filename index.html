@@ -219,8 +219,14 @@
     });
 
     function initializePuzzle() {
-      puzzle = Array.from({ length: 16 }, (_, i) => i < 15 ? i : 'empty');
-      emptyIndex = 15;
+      // Create the initial puzzle array with numbers 0-14 and 'empty'
+      puzzle = [];
+      for (let i = 0; i < 16; i++) {
+        puzzle[i] = i < 15 ? i : 'empty';
+      }
+      emptyIndex = 15; // Start with empty tile at bottom right
+      console.log('Initial puzzle:', [...puzzle]);
+      console.log('Initial empty index:', emptyIndex);
       shufflePuzzle();
     }
 
@@ -237,12 +243,14 @@
 
         if (tile === 'empty') {
           tileDiv.classList.add('empty-tile');
+          tileDiv.style.backgroundColor = '#fff';
         } else {
           const row = Math.floor(tile / 4);
           const col = tile % 4;
           tileDiv.style.backgroundImage = `url('${selectedImage}')`;
           tileDiv.style.backgroundPosition = `${-col * 33.33}% ${-row * 33.33}%`;
           tileDiv.style.backgroundSize = '400% 400%';
+          tileDiv.textContent = tile + 1; // Adding number for debugging
         }
 
         tileDiv.style.width = `${tileWidth}px`;
@@ -283,21 +291,31 @@
     }
 
     function swapTiles(index1, index2) {
+      console.log('Swapping tiles:', index1, index2);
+      console.log('Before swap:', [...puzzle]);
       [puzzle[index1], puzzle[index2]] = [puzzle[index2], puzzle[index1]];
       if (puzzle[index1] === 'empty') {
         emptyIndex = index1;
       } else if (puzzle[index2] === 'empty') {
         emptyIndex = index2;
       }
+      console.log('After swap:', [...puzzle]);
+      console.log('Empty index is now:', emptyIndex);
     }
 
     function moveTile(clickedIndex) {
+      console.log('Clicked index:', clickedIndex);
+      console.log('Current empty index:', emptyIndex);
+      console.log('Is adjacent?', isAdjacent(clickedIndex, emptyIndex));
+      
       if (isAdjacent(clickedIndex, emptyIndex)) {
         swapTiles(clickedIndex, emptyIndex);
         renderPuzzle();
         if (checkWin()) {
           endGame();
         }
+      } else {
+        console.log('Not adjacent to empty tile');
       }
     }
 
