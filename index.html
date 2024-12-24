@@ -279,16 +279,11 @@
           const sourceY = Math.floor(tile / 4);
           
           displayDiv.style.backgroundImage = `url('${this.selectedImage}')`;
-          displayDiv.style.backgroundPosition = `${sourceX * -100}% ${sourceY * -100}%`;
+          displayDiv.style.backgroundPosition = `${-sourceX * 33.33}% ${-sourceY * 33.33}%`;
           displayDiv.style.backgroundSize = '400% 400%';
-          displayDiv.style.border = '1px solid #999';
-          // Keep numbers temporarily for debugging
-          displayDiv.style.fontSize = '24px';
-          displayDiv.style.display = 'flex';
-          displayDiv.style.alignItems = 'center';
-          displayDiv.style.justifyContent = 'center';
-          displayDiv.style.color = 'rgba(102, 102, 102, 0.5)';
-          displayDiv.textContent = tile + 1;
+          displayDiv.style.backgroundRepeat = 'no-repeat';
+          displayDiv.style.border = '1px solid rgba(153, 153, 153, 0.3)';
+          displayDiv.style.boxShadow = '2px 2px 5px rgba(0,0,0,0.1)';
         }
         
         displayDiv.addEventListener('click', () => this.handleTileClick(position));
