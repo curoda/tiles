@@ -275,9 +275,9 @@
            displayDiv.style.backgroundColor = '#eee';
            displayDiv.style.border = '1px solid #ddd';
        } else {
-           // Calculate the background position based on the tile index
-           const sourceX = tile % 4;
-           const sourceY = Math.floor(tile / 4);
+           // Calculate sourceX and sourceY based on tile POSITION
+           const sourceX = position % 4; 
+           const sourceY = Math.floor(position / 4);
   
            displayDiv.style.backgroundImage = `url('${this.selectedImage}')`;
            displayDiv.style.backgroundSize = '400% 400%';
