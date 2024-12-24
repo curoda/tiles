@@ -218,12 +218,18 @@
       
       startGame() {
         this.selectedImage = this.images[Math.floor(Math.random() * this.images.length)];
-        this.initializePuzzle();
-        this.startTime = Date.now();
-        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
-        this.startScreen.classList.add('hidden');
-        this.gameScreen.classList.remove('hidden');
-        this.renderPuzzle();
+        console.log('Selected image:', this.selectedImage);
+        // Create a dummy image to ensure it's loaded
+        const preloadImg = new Image();
+        preloadImg.onload = () => {
+          this.initializePuzzle();
+          this.startTime = Date.now();
+          this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+          this.startScreen.classList.add('hidden');
+          this.gameScreen.classList.remove('hidden');
+          this.renderPuzzle();
+        };
+        preloadImg.src = this.selectedImage;
       }
       
       resetGame() {
@@ -272,15 +278,16 @@
           const sourceX = tile % 4;
           const sourceY = Math.floor(tile / 4);
           
-          displayDiv.style.backgroundImage = `url('/api/placeholder/400/400')`;
-          displayDiv.style.backgroundPosition = `${-sourceX * 100 / 3}% ${-sourceY * 100 / 3}%`;
+          displayDiv.style.backgroundImage = `url('${this.selectedImage}')`;
+          displayDiv.style.backgroundPosition = `${sourceX * -100}% ${sourceY * -100}%`;
           displayDiv.style.backgroundSize = '400% 400%';
           displayDiv.style.border = '1px solid #999';
+          // Keep numbers temporarily for debugging
           displayDiv.style.fontSize = '24px';
           displayDiv.style.display = 'flex';
           displayDiv.style.alignItems = 'center';
           displayDiv.style.justifyContent = 'center';
-          displayDiv.style.color = '#666';
+          displayDiv.style.color = 'rgba(102, 102, 102, 0.5)';
           displayDiv.textContent = tile + 1;
         }
         
