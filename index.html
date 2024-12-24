@@ -204,13 +204,11 @@
 
     document.getElementById('start-btn').addEventListener('click', () => {
       selectedImage = images[Math.floor(Math.random() * images.length)];
-      puzzle = Array.from({ length: 15 }, (_, i) => i).concat('empty');
-      emptyIndex = 15;
+      initializePuzzle();
       startTime = Date.now();
       timerInterval = setInterval(updateTimer, 1000);
       startScreen.classList.add('hidden');
       gameScreen.classList.remove('hidden');
-      shufflePuzzle();
       renderPuzzle();
     });
 
@@ -219,6 +217,12 @@
       startScreen.classList.remove('hidden');
       clearInterval(timerInterval);
     });
+
+    function initializePuzzle() {
+      puzzle = Array.from({ length: 16 }, (_, i) => i < 15 ? i : 'empty');
+      emptyIndex = 15;
+      shufflePuzzle();
+    }
 
     function renderPuzzle() {
       puzzleContainer.innerHTML = '';
@@ -237,7 +241,7 @@
           const row = Math.floor(tile / 4);
           const col = tile % 4;
           tileDiv.style.backgroundImage = `url('${selectedImage}')`;
-          tileDiv.style.backgroundPosition = `${col * 25}% ${row * 25}%`;
+          tileDiv.style.backgroundPosition = `${-col * 33.33}% ${-row * 33.33}%`;
           tileDiv.style.backgroundSize = '400% 400%';
         }
 
@@ -254,32 +258,46 @@
     }
 
     function shufflePuzzle() {
-      do {
-        for (let i = puzzle.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]];
-        }
-      } while (!isSolvable());
-    }
-
-    function isSolvable() {
-      let inversions = 0;
-      const flatPuzzle = puzzle.filter(v => v !== 'empty');
-      for (let i = 0; i < flatPuzzle.length; i++) {
-        for (let j = i + 1; j < flatPuzzle.length; j++) {
-          if (flatPuzzle[i] > flatPuzzle[j]) inversions++;
+      let moves = 0;
+      while (moves < 200) {
+        const possibleMoves = getValidMoves();
+        if (possibleMoves.length > 0) {
+          const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+          swapTiles(randomMove, emptyIndex);
+          moves++;
         }
       }
-      const blankRow = Math.floor(emptyIndex / 4);
-      return (inversions % 2 === 0) === (blankRow % 2 === 1);
     }
 
-    function moveTile(tileIndex) {
-      if (isAdjacent(tileIndex, emptyIndex)) {
-        [puzzle[tileIndex], puzzle[emptyIndex]] = [puzzle[emptyIndex], puzzle[tileIndex]];
-        emptyIndex = tileIndex;
+    function getValidMoves() {
+      const validMoves = [];
+      const row = Math.floor(emptyIndex / 4);
+      const col = emptyIndex % 4;
+
+      if (row > 0) validMoves.push(emptyIndex - 4); // up
+      if (row < 3) validMoves.push(emptyIndex + 4); // down
+      if (col > 0) validMoves.push(emptyIndex - 1); // left
+      if (col < 3) validMoves.push(emptyIndex + 1); // right
+
+      return validMoves;
+    }
+
+    function swapTiles(index1, index2) {
+      [puzzle[index1], puzzle[index2]] = [puzzle[index2], puzzle[index1]];
+      if (puzzle[index1] === 'empty') {
+        emptyIndex = index1;
+      } else if (puzzle[index2] === 'empty') {
+        emptyIndex = index2;
+      }
+    }
+
+    function moveTile(clickedIndex) {
+      if (isAdjacent(clickedIndex, emptyIndex)) {
+        swapTiles(clickedIndex, emptyIndex);
         renderPuzzle();
-        if (checkWin()) endGame();
+        if (checkWin()) {
+          endGame();
+        }
       }
     }
 
@@ -295,20 +313,24 @@
     }
 
     function checkWin() {
-      return puzzle.slice(0, 15).every((tile, i) => tile === i);
+      return puzzle.slice(0, 15).every((tile, index) => tile === index);
     }
 
     function endGame() {
       clearInterval(timerInterval);
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = (elapsed % 60).toString().padStart(2, '0');
       overlayMessage.textContent = "You solved it!";
-      overlayTime.textContent = `Time: ${Math.floor(elapsed / 60)}:${elapsed % 60}`;
+      overlayTime.textContent = `Time: ${minutes}:${seconds}`;
       winOverlay.classList.remove('hidden');
     }
 
     function updateTimer() {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      timerDisplay.textContent = `${Math.floor(elapsed / 60).toString().padStart(2, '0')}:${(elapsed % 60).toString().padStart(2, '0')}`;
+      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const seconds = (elapsed % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = `${minutes}:${seconds}`;
     }
   </script>
 </body>
