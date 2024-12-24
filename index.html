@@ -94,11 +94,15 @@
       background-size: 400% 400%;
       background-repeat: no-repeat;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     }
 
     .empty-tile {
       background: none;
       cursor: default;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
     }
 
     /* Win Overlay */
@@ -240,17 +244,30 @@
       puzzle.forEach((tile, index) => {
         const tileDiv = document.createElement('div');
         tileDiv.classList.add('tile');
+        
+        const row = Math.floor(index / 4);
+        const col = index % 4;
+        tileDiv.style.width = `${tileWidth}px`;
+        tileDiv.style.height = `${tileHeight}px`;
+        tileDiv.style.transform = `translate(${col * tileWidth}px, ${row * tileHeight}px)`;
 
         if (tile === 'empty') {
           tileDiv.classList.add('empty-tile');
-          tileDiv.style.backgroundColor = '#fff';
+          tileDiv.style.backgroundColor = '#eee';
+          tileDiv.style.border = '1px solid #ddd';
         } else {
-          const row = Math.floor(tile / 4);
-          const col = tile % 4;
-          tileDiv.style.backgroundImage = `url('${selectedImage}')`;
-          tileDiv.style.backgroundPosition = `${-col * 33.33}% ${-row * 33.33}%`;
+          const tileRow = Math.floor(tile / 4);
+          const tileCol = tile % 4;
+          tileDiv.style.backgroundImage = `url('/api/placeholder/400/400')`; // Using placeholder for now
+          tileDiv.style.backgroundPosition = `${-tileCol * 33.333}% ${-tileRow * 33.333}%`;
           tileDiv.style.backgroundSize = '400% 400%';
-          tileDiv.textContent = tile + 1; // Adding number for debugging
+          tileDiv.style.border = '1px solid #999';
+          tileDiv.style.fontSize = '24px';
+          tileDiv.style.display = 'flex';
+          tileDiv.style.alignItems = 'center';
+          tileDiv.style.justifyContent = 'center';
+          tileDiv.style.color = '#666';
+          tileDiv.textContent = tile + 1;
         }
 
         tileDiv.style.width = `${tileWidth}px`;
