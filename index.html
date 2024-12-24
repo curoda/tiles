@@ -181,211 +181,191 @@
   </div>
 
   <script>
-    let puzzle = [];
-    let emptyIndex = 15;
-    let selectedImage = '';
-    let timerInterval;
-    let startTime;
-
-    const images = [
-      'sumo.webp',
-      'unicorn.webp',
-      'beach.webp',
-      'reindeer.webp',
-      'platy.webp',
-      'grinch.webp',
-      'karate.webp',
-      'otter.webp'
-    ];
-
-    const puzzleContainer = document.getElementById('puzzle-container');
-    const timerDisplay = document.getElementById('timer');
-    const startScreen = document.getElementById('start-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const winOverlay = document.getElementById('win-overlay');
-    const overlayMessage = document.getElementById('overlay-message');
-    const overlayTime = document.getElementById('overlay-time');
-
-    document.getElementById('start-btn').addEventListener('click', () => {
-      selectedImage = images[Math.floor(Math.random() * images.length)];
-      initializePuzzle();
-      startTime = Date.now();
-      timerInterval = setInterval(updateTimer, 1000);
-      startScreen.classList.add('hidden');
-      gameScreen.classList.remove('hidden');
-      renderPuzzle();
-    });
-
-    document.getElementById('play-again-btn').addEventListener('click', () => {
-      winOverlay.classList.add('hidden');
-      startScreen.classList.remove('hidden');
-      clearInterval(timerInterval);
-    });
-
-    function initializePuzzle() {
-      // Create the initial puzzle array with numbers 0-14 and 'empty'
-      puzzle = [];
-      for (let i = 0; i < 16; i++) {
-        puzzle[i] = i < 15 ? i : 'empty';
-      }
-      emptyIndex = 15; // Start with empty tile at bottom right
-      console.log('Initial puzzle:', [...puzzle]);
-      console.log('Initial empty index:', emptyIndex);
-      shufflePuzzle();
-    }
-
-    function renderPuzzle() {
-      puzzleContainer.innerHTML = '';
-      const containerWidth = puzzleContainer.offsetWidth;
-      const containerHeight = puzzleContainer.offsetHeight;
-      const tileWidth = containerWidth / 4;
-      const tileHeight = containerHeight / 4;
-
-      puzzle.forEach((tile, index) => {
-        const tileDiv = document.createElement('div');
-        tileDiv.classList.add('tile');
+    class PuzzleGame {
+      constructor() {
+        this.puzzle = [];
+        this.emptyIndex = 15;
+        this.selectedImage = '';
+        this.timerInterval = null;
+        this.startTime = null;
         
-        const row = Math.floor(index / 4);
-        const col = index % 4;
-        tileDiv.style.width = `${tileWidth}px`;
-        tileDiv.style.height = `${tileHeight}px`;
-        tileDiv.style.transform = `translate(${col * tileWidth}px, ${row * tileHeight}px)`;
-
-        if (tile === 'empty') {
-          tileDiv.classList.add('empty-tile');
-          tileDiv.style.backgroundColor = '#eee';
-          tileDiv.style.border = '1px solid #ddd';
-        } else {
-          const tileRow = Math.floor(tile / 4);
-          const tileCol = tile % 4;
-          // Calculate background position to show correct part of the image
-          const tileRow = Math.floor(tile / 4);
-          const tileCol = tile % 4;
-          tileDiv.style.backgroundImage = `url('/api/placeholder/400/400')`;
-          tileDiv.style.backgroundPosition = `${-tileCol * 100 / 3}% ${-tileRow * 100 / 3}%`;
-          tileDiv.style.backgroundSize = '400% 400%';
-          tileDiv.style.border = '1px solid #999';
-          tileDiv.style.fontSize = '24px';
-          tileDiv.style.display = 'flex';
-          tileDiv.style.alignItems = 'center';
-          tileDiv.style.justifyContent = 'center';
-          tileDiv.style.color = '#666';
-          tileDiv.textContent = tile + 1;
-        }
-
-        tileDiv.style.width = `${tileWidth}px`;
-        tileDiv.style.height = `${tileHeight}px`;
-
-        const row = Math.floor(index / 4);
-        const col = index % 4;
-        tileDiv.style.transform = `translate(${col * tileWidth}px, ${row * tileHeight}px)`;
-
-        tileDiv.addEventListener('click', () => moveTile(index));
-        puzzleContainer.appendChild(tileDiv);
-      });
-    }
-
-    function shufflePuzzle() {
-      let moves = 0;
-      while (moves < 200) {
-        const possibleMoves = getValidMoves();
-        if (possibleMoves.length > 0) {
-          const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-          swapTiles(randomMove, emptyIndex);
-          moves++;
-        }
+        this.puzzleContainer = document.getElementById('puzzle-container');
+        this.timerDisplay = document.getElementById('timer');
+        this.startScreen = document.getElementById('start-screen');
+        this.gameScreen = document.getElementById('game-screen');
+        this.winOverlay = document.getElementById('win-overlay');
+        this.overlayMessage = document.getElementById('overlay-message');
+        this.overlayTime = document.getElementById('overlay-time');
+        
+        this.images = [
+          'sumo.webp',
+          'unicorn.webp',
+          'beach.webp',
+          'reindeer.webp',
+          'platy.webp',
+          'grinch.webp',
+          'karate.webp',
+          'otter.webp'
+        ];
+        
+        this.initializeEventListeners();
       }
-    }
-
-    function getValidMoves() {
-      const validMoves = [];
-      const row = Math.floor(emptyIndex / 4);
-      const col = emptyIndex % 4;
-
-      if (row > 0) validMoves.push(emptyIndex - 4); // up
-      if (row < 3) validMoves.push(emptyIndex + 4); // down
-      if (col > 0) validMoves.push(emptyIndex - 1); // left
-      if (col < 3) validMoves.push(emptyIndex + 1); // right
-
-      return validMoves;
-    }
-
-    function swapTiles(index1, index2) {
-      console.log('Swapping tiles:', index1, index2);
-      console.log('Before swap:', [...puzzle]);
-      [puzzle[index1], puzzle[index2]] = [puzzle[index2], puzzle[index1]];
-      if (puzzle[index1] === 'empty') {
-        emptyIndex = index1;
-      } else if (puzzle[index2] === 'empty') {
-        emptyIndex = index2;
-      }
-      console.log('After swap:', [...puzzle]);
-      console.log('Empty index is now:', emptyIndex);
-    }
-
-    function moveTile(clickedIndex) {
-      console.log('Clicked index:', clickedIndex);
-      console.log('Current empty index:', emptyIndex);
-      console.log('Current puzzle state:', puzzle);
       
-      // Only allow moving tiles adjacent to the empty space
-      if (isAdjacent(clickedIndex, emptyIndex)) {
-        // Get current tile values
-        const clickedTile = puzzle[clickedIndex];
-        const emptyTile = puzzle[emptyIndex];
+      initializeEventListeners() {
+        document.getElementById('start-btn').addEventListener('click', () => this.startGame());
+        document.getElementById('play-again-btn').addEventListener('click', () => this.resetGame());
+      }
+      
+      startGame() {
+        this.selectedImage = this.images[Math.floor(Math.random() * this.images.length)];
+        this.initializePuzzle();
+        this.startTime = Date.now();
+        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+        this.startScreen.classList.add('hidden');
+        this.gameScreen.classList.remove('hidden');
+        this.renderPuzzle();
+      }
+      
+      resetGame() {
+        this.winOverlay.classList.add('hidden');
+        this.startScreen.classList.remove('hidden');
+        clearInterval(this.timerInterval);
+      }
+      
+      initializePuzzle() {
+        this.puzzle = Array.from({ length: 16 }, (_, i) => i < 15 ? i : 'empty');
+        this.emptyIndex = 15;
+        this.shufflePuzzle();
+      }
+      
+      renderPuzzle() {
+        const containerWidth = this.puzzleContainer.offsetWidth;
+        const containerHeight = this.puzzleContainer.offsetHeight;
+        const tileWidth = containerWidth / 4;
+        const tileHeight = containerHeight / 4;
         
-        // Update puzzle array
-        puzzle[emptyIndex] = clickedTile;
-        puzzle[clickedIndex] = emptyTile;
+        this.puzzleContainer.innerHTML = '';
         
-        // Update empty index
-        emptyIndex = clickedIndex;
-        
-        console.log('After move:');
-        console.log('New empty index:', emptyIndex);
-        console.log('New puzzle state:', puzzle);
-        
-        renderPuzzle();
-        
-        if (checkWin()) {
-          endGame();
+        for (let i = 0; i < this.puzzle.length; i++) {
+          const tile = this.puzzle[i];
+          const displayDiv = this.createTileElement(tile, i, tileWidth, tileHeight);
+          this.puzzleContainer.appendChild(displayDiv);
         }
-      } else {
-        console.log('Not adjacent to empty tile');
+      }
+      
+      createTileElement(tile, position, width, height) {
+        const displayDiv = document.createElement('div');
+        displayDiv.classList.add('tile');
+        
+        const displayX = position % 4;
+        const displayY = Math.floor(position / 4);
+        
+        displayDiv.style.width = `${width}px`;
+        displayDiv.style.height = `${height}px`;
+        displayDiv.style.transform = `translate(${displayX * width}px, ${displayY * height}px)`;
+        
+        if (tile === 'empty') {
+          displayDiv.classList.add('empty-tile');
+          displayDiv.style.backgroundColor = '#eee';
+          displayDiv.style.border = '1px solid #ddd';
+        } else {
+          const sourceX = tile % 4;
+          const sourceY = Math.floor(tile / 4);
+          
+          displayDiv.style.backgroundImage = `url('/api/placeholder/400/400')`;
+          displayDiv.style.backgroundPosition = `${-sourceX * 100 / 3}% ${-sourceY * 100 / 3}%`;
+          displayDiv.style.backgroundSize = '400% 400%';
+          displayDiv.style.border = '1px solid #999';
+          displayDiv.style.fontSize = '24px';
+          displayDiv.style.display = 'flex';
+          displayDiv.style.alignItems = 'center';
+          displayDiv.style.justifyContent = 'center';
+          displayDiv.style.color = '#666';
+          displayDiv.textContent = tile + 1;
+        }
+        
+        displayDiv.addEventListener('click', () => this.handleTileClick(position));
+        return displayDiv;
+      }
+      
+      handleTileClick(clickedPosition) {
+        if (this.isAdjacent(clickedPosition, this.emptyIndex)) {
+          this.swapTiles(clickedPosition, this.emptyIndex);
+          this.renderPuzzle();
+          
+          if (this.checkWin()) {
+            this.endGame();
+          }
+        }
+      }
+      
+      swapTiles(position1, position2) {
+        [this.puzzle[position1], this.puzzle[position2]] = [this.puzzle[position2], this.puzzle[position1]];
+        this.emptyIndex = position1;
+      }
+      
+      isAdjacent(pos1, pos2) {
+        const row1 = Math.floor(pos1 / 4);
+        const col1 = pos1 % 4;
+        const row2 = Math.floor(pos2 / 4);
+        const col2 = pos2 % 4;
+        return (
+          (row1 === row2 && Math.abs(col1 - col2) === 1) ||
+          (col1 === col2 && Math.abs(row1 - row2) === 1)
+        );
+      }
+      
+      shufflePuzzle() {
+        let moves = 0;
+        while (moves < 200) {
+          const validMoves = this.getValidMoves();
+          if (validMoves.length > 0) {
+            const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+            this.swapTiles(randomMove, this.emptyIndex);
+            moves++;
+          }
+        }
+      }
+      
+      getValidMoves() {
+        const validMoves = [];
+        const row = Math.floor(this.emptyIndex / 4);
+        const col = this.emptyIndex % 4;
+        
+        if (row > 0) validMoves.push(this.emptyIndex - 4);
+        if (row < 3) validMoves.push(this.emptyIndex + 4);
+        if (col > 0) validMoves.push(this.emptyIndex - 1);
+        if (col < 3) validMoves.push(this.emptyIndex + 1);
+        
+        return validMoves;
+      }
+      
+      checkWin() {
+        return this.puzzle.slice(0, 15).every((tile, index) => tile === index);
+      }
+      
+      endGame() {
+        clearInterval(this.timerInterval);
+        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        this.overlayMessage.textContent = "You solved it!";
+        this.overlayTime.textContent = `Time: ${minutes}:${seconds}`;
+        this.winOverlay.classList.remove('hidden');
+      }
+      
+      updateTimer() {
+        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        this.timerDisplay.textContent = `${minutes}:${seconds}`;
       }
     }
 
-    function isAdjacent(index1, index2) {
-      const row1 = Math.floor(index1 / 4);
-      const col1 = index1 % 4;
-      const row2 = Math.floor(index2 / 4);
-      const col2 = index2 % 4;
-      return (
-        (row1 === row2 && Math.abs(col1 - col2) === 1) ||
-        (col1 === col2 && Math.abs(row1 - row2) === 1)
-      );
-    }
-
-    function checkWin() {
-      return puzzle.slice(0, 15).every((tile, index) => tile === index);
-    }
-
-    function endGame() {
-      clearInterval(timerInterval);
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      const seconds = (elapsed % 60).toString().padStart(2, '0');
-      overlayMessage.textContent = "You solved it!";
-      overlayTime.textContent = `Time: ${minutes}:${seconds}`;
-      winOverlay.classList.remove('hidden');
-    }
-
-    function updateTimer() {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      const seconds = (elapsed % 60).toString().padStart(2, '0');
-      timerDisplay.textContent = `${minutes}:${seconds}`;
-    }
+    // Initialize the game when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      const game = new PuzzleGame();
+    });
   </script>
 </body>
 </html>
