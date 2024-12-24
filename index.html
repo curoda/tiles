@@ -358,39 +358,43 @@
      ************************************************************/
     function renderPuzzle() {
       puzzleContainer.innerHTML = '';
-      
+    
+      // Calculate tile size based on the container's size
+      const containerWidth = puzzleContainer.offsetWidth;
+      const containerHeight = puzzleContainer.offsetHeight;
+      const tileWidth = containerWidth / 4; // 4 columns
+      const tileHeight = containerHeight / 4; // 4 rows
+    
       puzzle.forEach((tile, index) => {
         const tileDiv = document.createElement('div');
         tileDiv.classList.add('tile');
-        
+    
         if (tile === 'empty') {
           tileDiv.classList.add('empty-tile');
         } else {
           // Calculate the correct x/y background offsets
-          // tile = number from 0..14
           const tileRow = Math.floor(tile / 4); // 0..3
           const tileCol = tile % 4;             // 0..3
-          
-          const bgX = (tileCol * 25) + '%';  // each tile is 25% wide
-          const bgY = (tileRow * 25) + '%';  // each tile is 25% tall
-          
+          const bgX = (tileCol * 25) + '%';     // Each tile is 25% wide
+          const bgY = (tileRow * 25) + '%';     // Each tile is 25% tall
+    
           tileDiv.style.backgroundImage = `url('${selectedImage}')`;
+          tileDiv.style.backgroundSize = '400% 400%'; // Entire image spans all tiles
           tileDiv.style.backgroundPosition = `${bgX} ${bgY}`;
-          
-          // Add click handler for moving the tile
-          tileDiv.addEventListener('click', () => moveTile(index));
         }
-        
-        // Position tile in puzzle-container
-        const row = Math.floor(index / 4);
-        const col = index % 4;
-        
-        // Translate each tile to its position
-        tileDiv.style.transform = `translate(${col * 25}%, ${row * 25}%)`;
-        
+    
+        // Set the dimensions and position of the tile
+        tileDiv.style.width = `${tileWidth}px`;
+        tileDiv.style.height = `${tileHeight}px`;
+    
+        const row = Math.floor(index / 4); // 0..3
+        const col = index % 4;             // 0..3
+        tileDiv.style.transform = `translate(${col * tileWidth}px, ${row * tileHeight}px)`;
+    
         puzzleContainer.appendChild(tileDiv);
       });
     }
+
 
     /************************************************************
      * Move Tile Function
